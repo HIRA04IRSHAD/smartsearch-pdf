@@ -1,0 +1,103 @@
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: system-ui, sans-serif;
+  text-align: left;
+}
+
+h1 {
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: #888;
+  margin-bottom: 1.5rem;
+}
+
+.search-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.search-bar input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: white;
+}
+
+.search-bar button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.error {
+  color: #ff6b6b;
+}
+
+.match-count {
+  color: #aaa;
+  margin-bottom: 0.75rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #333;
+  padding: 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #1a1a1a;
+}
+
+.context-cell {
+  max-width: 350px;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.explain-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.explanation-box {
+  font-size: 0.85rem;
+}
+
+.explanation-topic {
+  color: #ffb703;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.explanation-text {
+  color: #8ecae6;
+  white-space: pre-line;
+}
+.upload-section {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px dashed #444;
+  border-radius: 8px;
+}
+
+.status-text {
+  color: #8ecae6;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
