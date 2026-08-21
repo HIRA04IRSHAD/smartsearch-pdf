@@ -1,6 +1,6 @@
-# 📖 PDF Topic Search
+# PDF Topic Search
 
-> Search a word across any PDF and get more than a page number — get the **chapter**, the **surrounding context**, and an on-demand **AI-generated topic explanation** grounded in exactly how the word is used there.
+> Search a word across any PDF and get more than a page number: get the chapter, the surrounding context, and an on demand AI generated topic explanation grounded in exactly how the word is used there.
 
 ![Python](https://img.shields.io/badge/Python-3.14-blue?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.x-black?logo=flask&logoColor=white)
@@ -11,32 +11,35 @@
 
 ---
 
-## 🧠 The Problem
+## The Problem
 
-Ctrl+F tells you *where* a word appears in a PDF. It doesn't tell you *what it means there*.
+Ctrl+F tells you where a word appears in a PDF. It doesn't tell you what it means there.
 
-Textbook PDFs are full of words that mean completely different things depending on where they show up. Take the word **"drop"**:
+Textbook PDFs are full of words that mean completely different things depending on where they show up. Take the word "drop":
 
-- In a **Database Management** chapter → a SQL command (`DROP TABLE`)
-- In a **UI/Programming** chapter → drag-and-drop, drop-down menus
-- In a **Software Economics** chapter → falling hardware prices
+- In a Database Management chapter, it's a SQL command (`DROP TABLE`)
+- In a UI/Programming chapter, it's drag and drop, drop down menus
+- In a Software Economics chapter, it's falling hardware prices
 
-A student searching a 700-page textbook has no fast way to know *which* meaning applies to *which* occurrence — until now.
+A student searching a 700 page textbook has no fast way to know which meaning applies to which occurrence, until now.
 
-## ✨ The Solution
+## The Solution
 
-Upload any PDF, search a word, and get a table of every occurrence with:
+Upload any PDF and search a word. You get every occurrence listed with its page, chapter, and the surrounding text, so you can quickly scan and judge for yourself which occurrence matches the topic you're actually studying.
 
-| Page | Chapter | Context | AI Explanation |
-|------|---------|---------|-----------------|
-| 530 | Chapter-09 | "...using a **drop**-down list, a set of option buttons..." | **Topic: UI/Programming concept** — refers to a UI element that expands to show selectable options. |
-| 25 | Chapter-01 | "...their prices **dropped** dramatically..." | **Topic: Computer Hardware Costs** — describes hardware becoming cheaper over time. |
+If the context snippet alone isn't enough to be sure, click "Explain" on that specific row. This sends just that occurrence (word plus its surrounding text plus chapter) to an AI model, which returns a short topic label and a one to two line explanation of what the word means in that exact context, not a generic dictionary definition.
 
-The AI explanation is only generated **on demand** (when you click "Explain"), keeping the free-tier API quota efficient instead of burning it on every search result.
+So the workflow looks like:
+1. Search the word
+2. Scan the context column for each occurrence
+3. If a row's context looks like a possible match for your topic, click "Explain" to get a small, focused summary confirming (or ruling out) that it's the right meaning
+4. Use that summary to finalize which occurrence is actually relevant to what you're studying
+
+This keeps things fast (search itself needs no AI call) and keeps the AI's free quota efficient, since it's only used for the specific rows you actually want confirmed.
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐         ┌──────────────────┐         ┌─────────────────┐
@@ -55,49 +58,49 @@ The AI explanation is only generated **on demand** (when you click "Explain"), k
 ```
 
 **How chapter detection works:**
-1. Try to read the PDF's embedded bookmarks/TOC (`doc.get_toc()`) — fast and accurate when available.
-2. **Fallback:** if no TOC exists, detect headings by analyzing font sizes across the document — text noticeably larger than the body-text size, filtered to remove watermarks, boilerplate, and TOC-page artifacts, then merged across adjacent lines.
-3. Convert chapter start-pages into page **ranges**, so any matched page can be mapped to its chapter.
+1. Try to read the PDF's embedded Table of Contents, or TOC (the bookmarks panel you see in a PDF reader's sidebar), using `doc.get_toc()`. This is fast and accurate when the PDF has it.
+2. Fallback: if no TOC exists, detect headings by analyzing font sizes across the document. Text noticeably larger than the body text size is treated as a heading candidate, filtered to remove watermarks, boilerplate, and TOC page artifacts, then merged across adjacent lines.
+3. Convert chapter start pages into page ranges, so any matched page can be mapped back to its chapter.
 
 **How the AI explanation stays cheap:**
-- `/search` returns raw matches instantly — no AI call.
-- `/explain` is called only when the user clicks a specific row's "Explain" button, sending just that occurrence's word + surrounding context + chapter to Gemini.
-- Automatic retry logic handles transient `503` (server busy) errors; `429` (rate limit) errors are surfaced clearly instead of silently retried, since retrying burns quota faster.
+- `/search` returns raw matches instantly, with no AI call involved.
+- `/explain` is called only when the user clicks a specific row's "Explain" button, sending just that occurrence's word, surrounding context, and chapter to Gemini.
+- Automatic retry logic handles transient `503` (server busy) errors. `429` (rate limit) errors are surfaced clearly instead of silently retried, since retrying just burns quota faster.
 
 ---
 
-## 🚀 Features
+## Features
 
-- 📤 **Upload any PDF** — processed and indexed in memory per upload (unique ID per session)
-- 🔍 **Instant word search** across every page, with chapter mapping
-- 🧭 **Dual chapter-detection strategy** — embedded TOC first, font-size heuristic fallback second
-- 🤖 **On-demand AI disambiguation** via Gemini — topic label + beginner-friendly explanation, grounded strictly in the surrounding text (not generic dictionary definitions)
-- ⚡ **Quota-conscious design** — AI calls happen only when explicitly requested, with retry/backoff for transient errors
-- 🎨 **Clean React UI** — upload status, match count, per-row explain buttons with loading states
+- Upload any PDF, processed and indexed in memory per upload with a unique ID per session
+- Instant word search across every page, with chapter mapping
+- Dual chapter detection strategy: embedded TOC first, font size heuristic fallback second
+- On demand AI disambiguation via Gemini: topic label plus a beginner friendly explanation, grounded strictly in the surrounding text rather than generic dictionary definitions
+- Quota conscious design: AI calls happen only when explicitly requested, with retry/backoff for transient errors
+- Clean React UI with upload status, match count, and per row explain buttons with loading states
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 **Backend**
-- [Flask](https://flask.palletsprojects.com/) — lightweight Python web framework
-- [PyMuPDF (fitz)](https://pymupdf.readthedocs.io/) — PDF parsing, text extraction, TOC/font analysis
-- [google-genai](https://pypi.org/project/google-genai/) — Gemini API client
-- [python-dotenv](https://pypi.org/project/python-dotenv/) — environment variable management
-- [flask-cors](https://pypi.org/project/Flask-Cors/) — cross-origin support for the React frontend
+- [Flask](https://flask.palletsprojects.com/): lightweight Python web framework
+- [PyMuPDF (fitz)](https://pymupdf.readthedocs.io/): PDF parsing, text extraction, TOC/font analysis
+- [google-genai](https://pypi.org/project/google-genai/): Gemini API client
+- [python-dotenv](https://pypi.org/project/python-dotenv/): environment variable management
+- [flask-cors](https://pypi.org/project/Flask-Cors/): cross origin support for the React frontend
 
 **Frontend**
-- [React](https://react.dev/) (via [Vite](https://vitejs.dev/)) — UI
-- Plain CSS — no framework overhead
+- [React](https://react.dev/) (via [Vite](https://vitejs.dev/)) for the UI
+- Plain CSS, no framework overhead
 
 **AI**
 - [Gemini API](https://aistudio.google.com/) (free tier, `gemini-flash-latest`)
 
-All tools used are **free-tier / open-source** — no paid APIs or subscriptions required.
+All tools used are free tier or open source. No paid APIs or subscriptions required.
 
 ---
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 PDFProj/
@@ -118,7 +121,7 @@ PDFProj/
 
 ---
 
-## ⚙️ Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 - Python 3.10+
@@ -127,8 +130,8 @@ PDFProj/
 
 ### 1. Clone the repo
 ```bash
-git clone https://github.com/<your-username>/PDFProj.git
-cd PDFProj
+git clone https://github.com/<your-username>/smartsearch-pdf.git
+cd smartsearch-pdf
 ```
 
 ### 2. Backend setup
@@ -153,7 +156,7 @@ python app.py
 Server runs at `http://127.0.0.1:5000`
 
 ### 3. Frontend setup
-Open a **new terminal**:
+Open a new terminal:
 ```bash
 cd pdf-search-frontend
 npm install
@@ -165,44 +168,34 @@ Frontend runs at `http://localhost:5173`
 1. Open `http://localhost:5173` in your browser
 2. Upload a PDF
 3. Search a word
-4. Click "Explain" on any result to get an AI-generated, context-specific explanation
+4. Click "Explain" on any result to get an AI generated, context specific explanation
 
 ---
 
-## 🔌 API Reference
+## API Reference
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/upload` | Upload a PDF (`multipart/form-data`, field: `file`). Returns `pdf_id`, page count, chapters found. |
 | `GET`  | `/search?word=<term>&pdf_id=<id>` | Search a word across the uploaded PDF. Returns all matches with page, chapter, and context. |
-| `GET`  | `/explain?word=<term>&context=<text>&chapter=<name>` | Get an AI-generated topic + explanation for a specific occurrence. |
+| `GET`  | `/explain?word=<term>&context=<text>&chapter=<name>` | Get an AI generated topic and explanation for a specific occurrence. |
 
 ---
 
-## 📸 Screenshots
+## Possible Future Improvements
 
-> _Add screenshots here once you have final polished ones — search results table, explain-in-action, and the upload screen work well._
-
-| Search Results | AI Explanation |
-|---|---|
-| _screenshot here_ | _screenshot here_ |
-
----
-
-## 🗺️ Possible Future Improvements
-
-- Persistent storage (SQLite/PostgreSQL) instead of in-memory PDF storage
-- Multi-word / phrase search
-- Highlight matched word directly on a rendered PDF page
-- Deploy backend (Render) + frontend (Vercel) for a live demo link
+- Persistent storage (SQLite/PostgreSQL) instead of in memory PDF storage
+- Multi word / phrase search
+- Highlight the matched word directly on a rendered PDF page
+- Deploy backend (Render) and frontend (Vercel) for a live demo link
 - User accounts to save previously uploaded PDFs
 
 ---
 
-## 📄 License
+## License
 
-MIT — free to use, modify, and share.
+This project uses the MIT License, one of the most common open source licenses. In short, it means anyone can use, copy, modify, and share this code, for free, for any purpose (including commercial), as long as the original copyright notice is kept. It also means the code comes with no warranty; you use it as is.
 
 ---
 
-*Built as a portfolio project demonstrating PDF processing, information retrieval, and practical LLM API integration — using entirely free-tier tools.*
+*Built as a portfolio project demonstrating PDF processing, information retrieval, and practical LLM API integration, using entirely free tier tools.*
